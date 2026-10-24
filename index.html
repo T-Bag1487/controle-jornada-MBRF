@@ -2,57 +2,94 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Controle de Jornada</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controle Jornada MBRF</title>
 
 <style>
+
 body{
-font-family:Arial;
-background:#f0f2f5;
-padding:20px;
+font-family:Arial,sans-serif;
+background:#0f172a;
+color:white;
+padding:15px;
 }
 
 .card{
-background:white;
+background:#1e293b;
 padding:20px;
 border-radius:12px;
-max-width:500px;
+max-width:600px;
 margin:auto;
-box-shadow:0 0 10px rgba(0,0,0,.15);
+margin-bottom:15px;
 }
 
-h2{
+h1{
 text-align:center;
 }
 
-input,button{
+input,button,select{
 width:100%;
 padding:12px;
-margin-top:10px;
+margin-top:8px;
+margin-bottom:10px;
+border:none;
+border-radius:8px;
 }
 
 button{
-background:#0057d8;
+background:#16a34a;
 color:white;
-border:none;
-border-radius:8px;
-font-size:16px;
+font-weight:bold;
+cursor:pointer;
 }
 
 .resultado{
-margin-top:20px;
-line-height:1.8;
+line-height:2;
+font-size:18px;
 }
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+td,th{
+padding:8px;
+border-bottom:1px solid #334155;
+text-align:left;
+}
+
+.alerta{
+color:#facc15;
+font-weight:bold;
+}
+
+.ok{
+color:#4ade80;
+font-weight:bold;
+}
+
 </style>
 </head>
 <body>
 
 <div class="card">
 
-<h2>Controle de Jornada</h2>
+<h1>Controle Jornada</h1>
 
-<label>Entrada</label>
+<label>Hora de Entrada</label>
 <input type="time" id="entrada">
+
+<label>Dia da Semana</label>
+<select id="dia">
+
+<option value="2">Terça</option>
+<option value="3">Quarta</option>
+<option value="4">Quinta</option>
+<option value="5">Sexta</option>
+<option value="6">Sábado</option>
+
+</select>
 
 <button onclick="calcular()">Calcular</button>
 
@@ -60,124 +97,215 @@ line-height:1.8;
 
 </div>
 
+<div class="card">
+
+<h2>Histórico</h2>
+
+<div id="historico"></div>
+
+</div>
+
 <script>
 
-function addMinutes(time,minutos){
+const jornada = 528;
+const intervalo = 60;
+const extraMax = 120;
 
-let total=time+minutos;
+function minutosHora(min){
 
-let h=Math.floor(total/60)%24;
-let m=total%60;
+let h=Math.floor(min/60)%24;
+let m=min%60;
 
 return String(h).padStart(2,'0')+
-":"+String(m).padStart(2,'0');
+":"+
+String(m).padStart(2,'0');
+
+}
+
+function horarioPrevisto(dia){
+
+switch(parseInt(dia)){
+
+case 2:
+case 3:
+case 4:
+return 420;
+
+case 5:
+return 300;
+
+case 6:
+return 180;
+
+default:
+return 420;
+
+}
 
 }
 
 function calcular(){
 
-const entrada=document.getElementById('entrada').value;
+let entrada=document.getElementById("entrada").value;
 
 if(!entrada){
+
 alert("Informe a entrada");
 return;
-}
-
-let agora=new Date();
-
-let dia=agora.getDay();
-
-let inicioPrevisto;
-
-switch(dia){
-
-case 2:
-case 3:
-case 4:
-inicioPrevisto=420;
-break;
-
-case 5:
-inicioPrevisto=300;
-break;
-
-case 6:
-inicioPrevisto=180;
-break;
-
-default:
-inicioPrevisto=420;
 
 }
+
+let dia=document.getElementById("dia").value;
 
 let partes=entrada.split(":");
 
 let entradaMin=
-parseInt(partes[0])*60+
+(parseInt(partes[0])*60)+
 parseInt(partes[1]);
 
-const jornada=528;
-const intervalo=60;
-const extraMax=120;
-
-let saidaNormal=
-addMinutes(
-entradaMin,
-jornada+intervalo
-);
-
-let saidaMax=
-addMinutes(
-entradaMin,
-jornada+intervalo+extraMax
-);
-
-let proxEntrada=
-addMinutes(
-entradaMin+jornada+intervalo+extraMax,
-660
-);
+let previsto=
+horarioPrevisto(dia);
 
 let atraso=
-entradaMin-inicioPrevisto;
+entradaMin-previsto;
 
-let atrasoTxt;
-
-if(atraso>0){
-
-let h=Math.floor(atraso/60);
-let m=atraso%60;
-
-atrasoTxt=
-`${h}h ${m}m`;
-
-}else{
-
-atrasoTxt="Sem atraso";
-
+if(atraso<0){
+atraso=0;
 }
+
+let saidaNormal=
+entradaMin+
+jornada+
+intervalo;
+
+let saidaMax=
+saidaNormal+
+extraMax;
+
+let saldoHoje=
+-atraso;
+
+let proxEntrada=
+saidaMax+
+660;
 
 document.getElementById("resultado").innerHTML=`
 
-<b>Saída Normal:</b> ${saidaNormal}<br>
-
-<b>Saída Máxima:</b> ${saidaMax}<br>
-
-<b>Permanência Máxima:</b> 11h48<br>
-
-<b>Atraso:</b> ${atrasoTxt}<br>
-
-<b>Próxima entrada mínima (11h):</b> ${proxEntrada}<br>
-
 <hr>
 
-✅ Jornada: 8h48<br>
-✅ Intervalo: 1h<br>
-✅ Extra máxima: 2h
+✅ Saída Normal:
+<b>${minutosHora(saidaNormal)}</b><br>
+
+✅ Saída Máxima:
+<b>${minutosHora(saidaMax)}</b><br>
+
+✅ Permanência Máxima:
+<b>11h48</b><br>
+
+✅ Atraso:
+<b>${Math.floor(atraso/60)}h ${atraso%60}m</b><br>
+
+✅ Banco Gerado Hoje:
+<b>${Math.floor(Math.abs(saldoHoje)/60)}h ${Math.abs(saldoHoje)%60}m</b><br>
+
+✅ Próxima Entrada Mínima:
+<b>${minutosHora(proxEntrada)}</b><br>
+
+<br>
+
+<span class="ok">
+Interjornada 11h considerada
+</span>
 
 `;
 
+salvarHistorico(
+entrada,
+minutosHora(saidaNormal),
+minutosHora(saidaMax)
+);
+
 }
+
+function salvarHistorico(
+entrada,
+normal,
+maxima){
+
+let dados=
+JSON.parse(
+localStorage.getItem("historico")
+||"[]"
+);
+
+dados.unshift({
+
+data:new Date().toLocaleDateString("pt-BR"),
+entrada:entrada,
+normal:normal,
+maxima:maxima
+
+});
+
+if(dados.length>30){
+
+dados.length=30;
+
+}
+
+localStorage.setItem(
+"historico",
+JSON.stringify(dados)
+);
+
+mostrarHistorico();
+
+}
+
+function mostrarHistorico(){
+
+let dados=
+JSON.parse(
+localStorage.getItem("historico")
+||"[]"
+);
+
+let html="<table>";
+
+html+=`
+<tr>
+<th>Data</th>
+<th>Entrada</th>
+<th>Saída</th>
+</tr>
+`;
+
+dados.forEach(l=>{
+
+html+=`
+
+<tr>
+
+<td>${l.data}</td>
+
+<td>${l.entrada}</td>
+
+<td>${l.normal}</td>
+
+</tr>
+
+`;
+
+});
+
+html+="</table>";
+
+document.getElementById("historico")
+.innerHTML=html;
+
+}
+
+mostrarHistorico();
 
 </script>
 
