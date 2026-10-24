@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Controle de Jornada</title>
+
+<style>
+body{
+font-family:Arial;
+background:#f0f2f5;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:12px;
+max-width:500px;
+margin:auto;
+box-shadow:0 0 10px rgba(0,0,0,.15);
+}
+
+h2{
+text-align:center;
+}
+
+input,button{
+width:100%;
+padding:12px;
+margin-top:10px;
+}
+
+button{
+background:#0057d8;
+color:white;
+border:none;
+border-radius:8px;
+font-size:16px;
+}
+
+.resultado{
+margin-top:20px;
+line-height:1.8;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+<h2>Controle de Jornada</h2>
+
+<label>Entrada</label>
+<input type="time" id="entrada">
+
+<button onclick="calcular()">Calcular</button>
+
+<div class="resultado" id="resultado"></div>
+
+</div>
+
+<script>
+
+function addMinutes(time,minutos){
+
+let total=time+minutos;
+
+let h=Math.floor(total/60)%24;
+let m=total%60;
+
+return String(h).padStart(2,'0')+
+":"+String(m).padStart(2,'0');
+
+}
+
+function calcular(){
+
+const entrada=document.getElementById('entrada').value;
+
+if(!entrada){
+alert("Informe a entrada");
+return;
+}
+
+let agora=new Date();
+
+let dia=agora.getDay();
+
+let inicioPrevisto;
+
+switch(dia){
+
+case 2:
+case 3:
+case 4:
+inicioPrevisto=420;
+break;
+
+case 5:
+inicioPrevisto=300;
+break;
+
+case 6:
+inicioPrevisto=180;
+break;
+
+default:
+inicioPrevisto=420;
+
+}
+
+let partes=entrada.split(":");
+
+let entradaMin=
+parseInt(partes[0])*60+
+parseInt(partes[1]);
+
+const jornada=528;
+const intervalo=60;
+const extraMax=120;
+
+let saidaNormal=
+addMinutes(
+entradaMin,
+jornada+intervalo
+);
+
+let saidaMax=
+addMinutes(
+entradaMin,
+jornada+intervalo+extraMax
+);
+
+let proxEntrada=
+addMinutes(
+entradaMin+jornada+intervalo+extraMax,
+660
+);
+
+let atraso=
+entradaMin-inicioPrevisto;
+
+let atrasoTxt;
+
+if(atraso>0){
+
+let h=Math.floor(atraso/60);
+let m=atraso%60;
+
+atrasoTxt=
+`${h}h ${m}m`;
+
+}else{
+
+atrasoTxt="Sem atraso";
+
+}
+
+document.getElementById("resultado").innerHTML=`
+
+<b>Saída Normal:</b> ${saidaNormal}<br>
+
+<b>Saída Máxima:</b> ${saidaMax}<br>
+
+<b>Permanência Máxima:</b> 11h48<br>
+
+<b>Atraso:</b> ${atrasoTxt}<br>
+
+<b>Próxima entrada mínima (11h):</b> ${proxEntrada}<br>
+
+<hr>
+
+✅ Jornada: 8h48<br>
+✅ Intervalo: 1h<br>
+✅ Extra máxima: 2h
+
+`;
+
+}
+
+</script>
+
+</body>
+</html>
